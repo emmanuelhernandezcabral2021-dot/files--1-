@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fútbol Europeo 2026-27 — Panel de estadísticas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pitch-900:#0B1F17;
+    --pitch-800:#123829;
+    --pitch-700:#1D4F3B;
+    --chalk:#F2F4EE;
+    --chalk-dim:#C9D2C7;
+    --amber:#E8A23A;
+    --amber-dim:#7A5A26;
+    --line:#28493A;
+    --card:#0F2A1F;
+    --red:#D2483C;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--pitch-900);
+    color:var(--chalk);
+    font-family:'Inter',sans-serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 24px 80px;}
+
+  header.top{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:2px solid var(--line);
+    padding-bottom:20px;margin-bottom:28px;
+    flex-wrap:wrap;gap:16px;
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--amber);margin:0 0 6px;
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;font-size:40px;letter-spacing:.01em;
+    margin:0;text-transform:uppercase;
+  }
+  .top-right{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--chalk-dim);}
+
+  nav.tabs{display:flex;gap:4px;margin-bottom:28px;border-bottom:1px solid var(--line);}
+  nav.tabs button{
+    background:none;border:none;color:var(--chalk-dim);
+    font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:.03em;
+    text-transform:uppercase;padding:12px 18px;cursor:pointer;
+    border-bottom:3px solid transparent;
+  }
+  nav.tabs button.active{color:var(--chalk);border-bottom-color:var(--amber);}
+  nav.tabs button:hover{color:var(--chalk);}
+
+  section.view{display:none;}
+  section.view.active{display:block;}
+
+  /* Ticker / scoreline strip */
+  .ticker{
+    display:flex;gap:0;overflow-x:auto;margin-bottom:32px;
+    border:1px solid var(--line);border-radius:4px;
+  }
+  .tick{
+    flex:0 0 auto;min-width:170px;padding:12px 16px;
+    border-right:1px solid var(--line);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .tick:last-child{border-right:none;}
+  .tick .teams{font-size:11px;color:var(--chalk-dim);display:flex;justify-content:space-between;margin-bottom:4px;}
+  .tick .score{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;letter-spacing:.05em;}
+
+  /* Table view */
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:4px;}
+  table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:12.5px;min-width:920px;}
+  thead th{
+    background:var(--pitch-800);color:var(--amber);
+    text-align:right;padding:10px 10px;font-weight:600;
+    letter-spacing:.02em;text-transform:uppercase;font-size:11px;
+    cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--line);
+  }
+  thead th:first-child,thead th:nth-child(2),thead th:nth-child(3){text-align:left;}
+  thead th:hover{color:var(--chalk);}
+  tbody td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;}
+  tbody td:first-child,tbody td:nth-child(2),tbody td:nth-child(3){text-align:left;}
+  tbody tr:hover{background:var(--card);}
+  .team-name{font-family:'Inter',sans-serif;font-weight:600;font-size:13px;}
+  .pill{
+    display:inline-block;padding:2px 8px;border-radius:10px;
+    font-size:11px;font-weight:600;
+  }
+  .pill.local{background:rgba(232,162,58,.15);color:var(--amber);}
+  .pill.visitante{background:rgba(201,210,199,.12);color:var(--chalk-dim);}
+
+  /* Team cards */
+  .grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+  .team-card{
+    background:var(--card);border:1px solid var(--line);border-radius:6px;
+    padding:18px 20px;
+  }
+  .team-card .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+  .team-card h3{font-family:'Oswald',sans-serif;font-size:18px;margin:0;text-transform:uppercase;letter-spacing:.01em;}
+  .team-card .score{font-family:'Oswald',sans-serif;font-size:20px;color:var(--amber);font-weight:600;}
+  .team-card .vs{font-size:12px;color:var(--chalk-dim);margin-bottom:14px;}
+  .stat-row{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:4px 0;border-bottom:1px dashed var(--line);}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-row span:last-child{color:var(--chalk);font-weight:600;}
+  .stat-row span:first-child{color:var(--chalk-dim);}
+  .bar-bg{height:5px;background:var(--pitch-800);border-radius:3px;margin-top:2px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--amber);}
+
+  /* Players view */
+  .team-players{margin-bottom:26px;}
+  .team-players h3{
+    font-family:'Oswald',sans-serif;font-size:16px;text-transform:uppercase;
+    letter-spacing:.02em;color:var(--amber);
+    border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px;
+  }
+  .player-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;}
+  .player{
+    background:var(--card);border:1px solid var(--line);border-radius:4px;
+    padding:10px 12px;display:flex;justify-content:space-between;align-items:center;
+  }
+  .player .name{font-size:13px;font-weight:500;}
+  .player .pos{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--pitch-900);
+    background:var(--chalk-dim);padding:2px 7px;border-radius:9px;text-transform:uppercase;
+  }
+  .note{
+    font-size:12px;color:var(--chalk-dim);background:var(--card);
+    border:1px solid var(--line);border-left:3px solid var(--amber);
+    padding:10px 14px;border-radius:0 4px 4px 0;margin-bottom:24px;
+  }
+
+  select{
+    background:var(--card);color:var(--chalk);border:1px solid var(--line);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;padding:7px 10px;border-radius:4px;
+    margin-bottom:18px;
+  }
+
+  .league-switch{display:flex;gap:8px;margin-bottom:20px;}
+  .league-switch button{
+    background:var(--card);border:1px solid var(--line);color:var(--chalk-dim);
+    font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:.03em;text-transform:uppercase;
+    padding:8px 16px;border-radius:20px;cursor:pointer;
+  }
+  .league-switch button.active{background:var(--amber);color:var(--pitch-900);border-color:var(--amber);font-weight:600;}
+  .league-switch button:hover:not(.active){color:var(--chalk);}
+  .tab-disabled{opacity:.35;cursor:not-allowed !important;}
+
+  footer{margin-top:40px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--chalk-dim);text-align:center;}
+
+  .day-group{margin-bottom:24px;}
+  .day-group h3{
+    font-family:'Oswald',sans-serif;font-size:14px;text-transform:uppercase;
+    letter-spacing:.06em;color:var(--chalk-dim);margin:0 0 10px;
+  }
+  .fixture{
+    background:var(--card);border:1px solid var(--line);border-radius:6px;
+    padding:14px 18px;margin-bottom:10px;
+  }
+  .fixture .matchup{
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:'Oswald',sans-serif;font-size:17px;text-transform:uppercase;margin-bottom:10px;
+  }
+  .fixture .matchup .vs-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);text-transform:none;}
+  .prob-bar{
+    display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--pitch-800);margin-bottom:6px;
+  }
+  .prob-bar span{height:100%;}
+  .prob-bar .home{background:var(--amber);}
+  .prob-bar .draw{background:var(--chalk-dim);}
+  .prob-bar .away{background:var(--red);}
+  .prob-labels{
+    display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;
+    font-size:11px;color:var(--chalk-dim);
+  }
+  .prob-labels b{color:var(--chalk);}
+
+  .grid-rankings{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;}
+  .rank-card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px 18px;}
+  .rank-card h3{
+    font-family:'Oswald',sans-serif;font-size:15px;text-transform:uppercase;
+    letter-spacing:.03em;color:var(--amber);margin:0 0 12px;
+    border-bottom:1px solid var(--line);padding-bottom:8px;
+  }
+  .rank-row{
+    display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;
+    font-size:12.5px;padding:5px 0;
+  }
+  .rank-row .pos{
+    font-family:'IBM Plex Mono',monospace;color:var(--chalk-dim);font-size:11px;
+  }
+  .rank-row .name{font-family:'Inter',sans-serif;}
+  .rank-row .val{
+    font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--chalk);
+    min-width:38px;text-align:right;
+  }
+  .rank-row .mini-bar{grid-column:2/4;height:3px;background:var(--pitch-800);border-radius:2px;margin-top:2px;overflow:hidden;}
+  .rank-row .mini-bar span{display:block;height:100%;background:var(--amber);}
+  .rank-row:nth-child(1) .val, .rank-row:nth-child(1) .name{color:var(--amber);}
+
+  .proj-card{
+    background:var(--card);border:1px solid var(--line);border-radius:6px;
+    padding:16px 20px;margin-bottom:14px;
+  }
+  .proj-head{
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:'Oswald',sans-serif;font-size:17px;text-transform:uppercase;
+    border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px;
+  }
+  .proj-head .date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--chalk-dim);text-transform:none;}
+  .proj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;}
+  .proj-metric .label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+  .proj-metric .value{font-family:'Oswald',sans-serif;font-size:18px;font-weight:600;}
+  .proj-metric .value .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--chalk-dim);font-weight:400;margin-left:4px;}
+  .tag{
+    display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;
+    padding:2px 8px;border-radius:9px;margin-top:2px;
+  }
+  .tag.yes{background:rgba(232,162,58,.15);color:var(--amber);}
+  .tag.no{background:rgba(201,210,199,.12);color:var(--chalk-dim);}
+
+  .matchup-card{
+    background:var(--card);border:1px solid var(--line);border-radius:6px;
+    padding:16px 20px;margin-bottom:14px;
+  }
+  .matchup-card .mhead{
+    font-family:'Oswald',sans-serif;font-size:17px;text-transform:uppercase;
+    border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .matchup-card .mhead .date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--chalk-dim);text-transform:none;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .two-col .side h4{
+    font-family:'Oswald',sans-serif;font-size:13px;text-transform:uppercase;
+    color:var(--amber);margin:0 0 8px;letter-spacing:.02em;
+  }
+  @media(max-width:560px){.two-col{grid-template-columns:1fr;}}
+
+  @media(max-width:640px){
+    h1{font-size:28px;}
+    .top-right{text-align:left;}
+  }
+</style>
+<script src="datos.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <p class="brand-eyebrow">Panel de estadísticas · No oficial</p>
+      <h1 id="mainTitle">Premier League 2026-27</h1>
+    </div>
+    <div class="top-right">
+      Jornada 1 completa<br>
+      20 equipos · 10 partidos
+    </div>
+  </header>
+
+  <div class="league-switch" id="leagueSwitch">
+    <button class="active" data-league="epl">Premier League</button>
+    <button data-league="laliga">La Liga</button>
+    <button data-league="seriea">Serie A</button>
+    <button data-league="bundesliga">Bundesliga</button>
+    <button data-league="ligue1">Ligue 1</button>
+    <button data-league="mls">MLS</button>
+  </div>
+
+  <div class="ticker" id="ticker"></div>
+
+  <nav class="tabs">
+    <button class="active" data-view="tabla">Tabla de equipos</button>
+    <button data-view="equipos">Equipos individual</button>
+    <button data-view="jugadores">Jugadores clave</button>
+    <button data-view="proximos">Próximos partidos</button>
+    <button data-view="rankings">Rankings por estadística</button>
+    <button data-view="proyecciones">Proyecciones próximo partido</button>
+    <button data-view="jugadoresproximos">Jugadores a seguir</button>
+    <button data-view="posiciones">Tabla de posiciones</button>
+  </nav>
+
+  <section class="view active" id="view-tabla">
+    <select id="sortSelect">
+      <option value="team">Ordenar: equipo (A-Z)</option>
+      <option value="poss">Ordenar: posesión</option>
+      <option value="shots">Ordenar: tiros totales</option>
+      <option value="onTarget">Ordenar: tiros a puerta</option>
+      <option value="corners">Ordenar: córners</option>
+      <option value="yellow">Ordenar: amarillas</option>
+    </select>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Equipo</th><th>Rival</th><th>Cond.</th><th>Marc.</th>
+            <th>Poses. %</th><th>Tiros</th><th>A puerta</th><th>Fuera</th><th>Bloq.</th>
+            <th>Córners</th><th>Faltas</th><th>Amar.</th><th>Rojas</th><th>F.J.</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="view" id="view-equipos">
+    <div class="grid-cards" id="teamCards"></div>
+  </section>
+
+  <section class="view" id="view-jugadores">
+    <p class="note">Nombres y posiciones confirmados por las alineaciones oficiales de la Jornada 1. Estadísticas individuales (goles, tarjetas, % de pases) aún no están disponibles desglosadas por jugador — la temporada acaba de comenzar.</p>
+    <div id="playersContainer"></div>
+  </section>
+
+  <section class="view" id="view-proximos">
+    <div id="upcomingContainer"></div>
+  </section>
+
+  <section class="view" id="view-rankings">
+    <div class="grid-rankings" id="rankingsContainer"></div>
+  </section>
+
+  <section class="view" id="view-proyecciones">
+    <p class="note">Proyección estadística simple a partir del rendimiento de cada equipo en la Jornada 1 (goles, córners y tarjetas propios frente a lo que concedió el rival de turno). No es un modelo predictivo avanzado — con una sola jornada jugada, es una referencia de tendencia, no una certeza.</p>
+    <div id="projectionsContainer"></div>
+  </section>
+
+  <section class="view" id="view-jugadoresproximos">
+    <p class="note">Jugadores clave de cada equipo por partido, según las alineaciones de la Jornada 1. No incluye probabilidades individuales (de gol, tarjeta, etc.) porque aún no existen estadísticas desglosadas por jugador — solo hay un partido jugado por equipo.</p>
+    <div id="matchupPlayersContainer"></div>
+  </section>
+
+  <section class="view" id="view-posiciones">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Pos</th><th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th>
+            <th>GF</th><th>GC</th><th>DG</th><th>Pts</th>
+          </tr>
+        </thead>
+        <tbody id="standingsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>Datos: Sportradar (Jornada 1, temporada 2026-27) · Panel generado a partir de la conversación</footer>
+</div>
+
+<script>
+
+let currentLeague = 'epl';
+
+function findTeam(league, name){ return LEAGUES[league].teams.find(t=>t.team===name); }
+function goals(team){
+  const [gf,ga] = team.score.split('-').map(Number);
+  return {gf, ga};
+}
+function findPlayers(league, name){
+  const list = LEAGUES[league].players;
+  if(!list) return [];
+  const entry = list.find(p=>p[0]===name);
+  return entry ? entry[1] : [];
+}
+
+function renderTicker(league){
+  const ticker = document.getElementById('ticker');
+  ticker.innerHTML = "";
+  if(LEAGUES[league].fixtures.length === 0){
+    ticker.innerHTML = `<div class="tick" style="min-width:100%;color:var(--chalk-dim);font-family:'IBM Plex Mono',monospace;font-size:12px;">Esta liga aún no ha jugado su primera jornada.</div>`;
+    return;
+  }
+  LEAGUES[league].fixtures.forEach(([h,a,s])=>{
+    const div = document.createElement('div');
+    div.className='tick';
+    div.innerHTML = `<div class="teams"><span>${h}</span><span>${a}</span></div><div class="score">${s}</div>`;
+    ticker.appendChild(div);
+  });
+}
+
+function renderTable(league, sortBy){
+  const body = document.getElementById('tableBody');
+  if(LEAGUES[league].teams.length === 0){
+    body.innerHTML = `<tr><td colspan="14" style="text-align:center;color:var(--chalk-dim);padding:20px;">Sin jornada jugada todavía para esta liga.</td></tr>`;
+    return;
+  }
+  let data = [...LEAGUES[league].teams];
+  const sorters = {
+    team: (a,b)=>a.team.localeCompare(b.team),
+    poss: (a,b)=>b.poss-a.poss,
+    shots: (a,b)=>b.shots-a.shots,
+    onTarget: (a,b)=>b.onTarget-a.onTarget,
+    corners: (a,b)=>b.corners-a.corners,
+    yellow: (a,b)=>b.yellow-a.yellow,
+  };
+  data.sort(sorters[sortBy] || sorters.team);
+  body.innerHTML = data.map(t=>`
+    <tr>
+      <td class="team-name">${t.team}</td>
+      <td>${t.rival}</td>
+      <td><span class="pill ${t.cond.toLowerCase()==='local'?'local':'visitante'}">${t.cond}</span></td>
+      <td>${t.score}</td>
+      <td>${t.poss}%</td>
+      <td>${t.shots}</td>
+      <td>${t.onTarget}</td>
+      <td>${t.off}</td>
+      <td>${t.blocked}</td>
+      <td>${t.corners}</td>
+      <td>${t.fouls}</td>
+      <td>${t.yellow}</td>
+      <td>${t.red}</td>
+      <td>${t.offside}</td>
+    </tr>
+  `).join('');
+}
+
+function renderTeamCards(league){
+  const cardsWrap = document.getElementById('teamCards');
+  if(LEAGUES[league].teams.length === 0){
+    cardsWrap.innerHTML = `<p class="note">Sin jornada jugada todavía para ${LEAGUES[league].label}.</p>`;
+    return;
+  }
+  cardsWrap.innerHTML = LEAGUES[league].teams.map(t=>{
+    const onPct = t.shots ? Math.round((t.onTarget/t.shots)*100) : 0;
+    return `
+    <div class="team-card">
+      <div class="head">
+        <h3>${t.team}</h3>
+        <span class="score">${t.score}</span>
+      </div>
+      <div class="vs">${t.cond} vs ${t.rival}</div>
+      <div class="stat-row"><span>Posesión</span><span>${t.poss}%</span></div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${t.poss}%"></div></div>
+      <div class="stat-row" style="margin-top:8px;"><span>Tiros totales</span><span>${t.shots}</span></div>
+      <div class="stat-row"><span>Tiros a puerta</span><span>${t.onTarget} (${onPct}%)</span></div>
+      <div class="stat-row"><span>Tiros fuera / bloqueados</span><span>${t.off} / ${t.blocked}</span></div>
+      <div class="stat-row"><span>Córners</span><span>${t.corners}</span></div>
+      <div class="stat-row"><span>Faltas</span><span>${t.fouls}</span></div>
+      <div class="stat-row"><span>Amarillas / Rojas</span><span>${t.yellow} / ${t.red}</span></div>
+      <div class="stat-row"><span>Fuera de lugar</span><span>${t.offside}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderPlayers(league){
+  const pWrap = document.getElementById('playersContainer');
+  const list = LEAGUES[league].players;
+  if(!list){
+    pWrap.innerHTML = `<p class="note">Aún no hay jugadores clave cargados para ${LEAGUES[league].label}.</p>`;
+    return;
+  }
+  pWrap.innerHTML = list.map(([team,plist])=>`
+    <div class="team-players">
+      <h3>${team}</h3>
+      <div class="player-list">
+        ${plist.map(([name,pos])=>`<div class="player"><span class="name">${name}</span><span class="pos">${pos}</span></div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderUpcoming(league){
+  const upWrap = document.getElementById('upcomingContainer');
+  let lastDate = "";
+  let html = "";
+  LEAGUES[league].upcoming.forEach(f=>{
+    if(f.date !== lastDate){
+      if(lastDate !== "") html += "</div>";
+      html += `<div class="day-group"><h3>${f.date}</h3>`;
+      lastDate = f.date;
+    }
+    html += `
+      <div class="fixture">
+        <div class="matchup">
+          <span>${f.home} vs ${f.away}</span>
+          <span class="vs-label">${f.hour} COL</span>
+        </div>
+        <div class="prob-bar">
+          <span class="home" style="width:${f.pHome}%"></span>
+          <span class="draw" style="width:${f.pDraw}%"></span>
+          <span class="away" style="width:${f.pAway}%"></span>
+        </div>
+        <div class="prob-labels">
+          <span><b>${Math.round(f.pHome)}%</b> local</span>
+          <span><b>${Math.round(f.pDraw)}%</b> empate</span>
+          <span><b>${Math.round(f.pAway)}%</b> visitante</span>
+        </div>
+      </div>`;
+  });
+  upWrap.innerHTML = html + "</div>";
+}
+
+const statDefs = [
+  {key:"poss", label:"Posesión", unit:"%", max:100},
+  {key:"shots", label:"Tiros totales", unit:"", max:null},
+  {key:"onTarget", label:"Tiros a puerta", unit:"", max:null},
+  {key:"blocked", label:"Tiros bloqueados", unit:"", max:null},
+  {key:"corners", label:"Córners", unit:"", max:null},
+  {key:"fouls", label:"Faltas cometidas", unit:"", max:null},
+  {key:"yellow", label:"Tarjetas amarillas", unit:"", max:null},
+  {key:"offside", label:"Fuera de lugar", unit:"", max:null},
+];
+
+function renderRankings(league){
+  const rankWrap = document.getElementById('rankingsContainer');
+  if(LEAGUES[league].teams.length === 0){
+    rankWrap.innerHTML = `<p class="note">Sin jornada jugada todavía para ${LEAGUES[league].label} — no hay estadísticas que rankear.</p>`;
+    return;
+  }
+  rankWrap.innerHTML = statDefs.map(def=>{
+    const sorted = [...LEAGUES[league].teams].sort((a,b)=>b[def.key]-a[def.key]);
+    const maxVal = def.max || sorted[0][def.key] || 1;
+    const rows = sorted.map((t,i)=>`
+      <div class="rank-row">
+        <span class="pos">${i+1}</span>
+        <span class="name">${t.team}</span>
+        <span class="val">${t[def.key]}${def.unit}</span>
+        <div class="mini-bar"><span style="width:${(t[def.key]/maxVal)*100}%"></span></div>
+      </div>
+    `).join('');
+    return `<div class="rank-card"><h3>${def.label}</h3>${rows}</div>`;
+  }).join('');
+}
+
+function renderProjections(league){
+  const projWrap = document.getElementById('projectionsContainer');
+  if(LEAGUES[league].teams.length === 0){
+    projWrap.innerHTML = `<p class="note">No se pueden proyectar estadísticas porque ${LEAGUES[league].label} aún no tiene una jornada jugada como referencia.</p>`;
+    return;
+  }
+  projWrap.innerHTML = LEAGUES[league].upcoming.map(f=>{
+    const h = findTeam(league, f.home);
+    const a = findTeam(league, f.away);
+    if(!h || !a) return '';
+    const hg = goals(h), ag = goals(a);
+
+    const expHome = (hg.gf + ag.ga) / 2;
+    const expAway = (ag.gf + hg.ga) / 2;
+    const expTotal = expHome + expAway;
+    const overUnder = expTotal > 2.5 ? "Más de 2.5" : "Menos de 2.5";
+
+    const bttsLikely = expHome >= 1 && expAway >= 1;
+    const expCorners = h.corners + a.corners;
+    const expCards = h.yellow + a.yellow;
+
+    return `
+      <div class="proj-card">
+        <div class="proj-head">
+          <span>${f.home} vs ${f.away}</span>
+          <span class="date">${f.date} · ${f.hour} COL</span>
+        </div>
+        <div class="proj-grid">
+          <div class="proj-metric">
+            <div class="label">Goles esperados</div>
+            <div class="value">${expHome.toFixed(1)} - ${expAway.toFixed(1)}<span class="sub">total ${expTotal.toFixed(1)}</span></div>
+          </div>
+          <div class="proj-metric">
+            <div class="label">Línea de goles</div>
+            <div class="value" style="font-size:14px;">${overUnder}</div>
+          </div>
+          <div class="proj-metric">
+            <div class="label">Ambos anotan</div>
+            <span class="tag ${bttsLikely?'yes':'no'}">${bttsLikely ? 'Probable' : 'Menos probable'}</span>
+          </div>
+          <div class="proj-metric">
+            <div class="label">Córners esperados</div>
+            <div class="value">${expCorners}</div>
+          </div>
+          <div class="proj-metric">
+            <div class="label">Amarillas esperadas</div>
+            <div class="value">${expCards}</div>
+          </div>
+          <div class="proj-metric">
+            <div class="label">Favorito (prob.)</div>
+            <div class="value" style="font-size:14px;">${f.pHome>f.pAway ? f.home : f.away} <span class="sub">${Math.round(Math.max(f.pHome,f.pAway))}%</span></div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderMatchupPlayers(league){
+  const mpWrap = document.getElementById('matchupPlayersContainer');
+  if(!LEAGUES[league].players){
+    mpWrap.innerHTML = `<p class="note">Aún no hay jugadores clave cargados para ${LEAGUES[league].label}.</p>`;
+    return;
+  }
+  mpWrap.innerHTML = LEAGUES[league].upcoming.map(f=>{
+    const homeList = findPlayers(league, f.home);
+    const awayList = findPlayers(league, f.away);
+    const renderList = list => list.map(([name,pos])=>`<div class="player"><span class="name">${name}</span><span class="pos">${pos}</span></div>`).join('');
+    return `
+      <div class="matchup-card">
+        <div class="mhead">
+          <span>${f.home} vs ${f.away}</span>
+          <span class="date">${f.date} · ${f.hour} COL</span>
+        </div>
+        <div class="two-col">
+          <div class="side">
+            <h4>${f.home}</h4>
+            <div class="player-list" style="grid-template-columns:1fr;">${renderList(homeList)}</div>
+          </div>
+          <div class="side">
+            <h4>${f.away}</h4>
+            <div class="player-list" style="grid-template-columns:1fr;">${renderList(awayList)}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderStandings(league){
+  const body = document.getElementById('standingsBody');
+  const data = LEAGUES[league].standings || [];
+  if(data.length === 0){
+    body.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--chalk-dim);padding:20px;">Sin datos de posiciones todavía.</td></tr>`;
+    return;
+  }
+  body.innerHTML = data.map(([team,w,d,l,gf,ga,gd,pts],i)=>{
+    const pj = w+d+l;
+    const zebra = i < 4 ? 'style="background:rgba(232,162,58,.08);"' : '';
+    return `
+    <tr ${zebra}>
+      <td>${i+1}</td>
+      <td class="team-name">${team}</td>
+      <td>${pj}</td>
+      <td>${w}</td>
+      <td>${d}</td>
+      <td>${l}</td>
+      <td>${gf}</td>
+      <td>${ga}</td>
+      <td>${gd>0?'+'+gd:gd}</td>
+      <td style="font-weight:600;color:var(--chalk);">${pts}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAll(league){
+  document.getElementById('mainTitle').textContent = LEAGUES[league].label + " 2026-27";
+  renderTicker(league);
+  renderTable(league, document.getElementById('sortSelect').value);
+  renderTeamCards(league);
+  renderPlayers(league);
+  renderUpcoming(league);
+  renderRankings(league);
+  renderProjections(league);
+  renderMatchupPlayers(league);
+  renderStandings(league);
+
+  const hasPlayers = LEAGUES[league].hasPlayers;
+  document.querySelectorAll('nav.tabs button[data-view="jugadores"], nav.tabs button[data-view="jugadoresproximos"]').forEach(btn=>{
+    btn.classList.toggle('tab-disabled', !hasPlayers);
+  });
+}
+
+document.getElementById('sortSelect').addEventListener('change', e=>renderTable(currentLeague, e.target.value));
+
+// League switch
+document.querySelectorAll('.league-switch button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.league-switch button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentLeague = btn.dataset.league;
+    renderAll(currentLeague);
+  });
+});
+
+// Tabs
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if(btn.classList.contains('tab-disabled')) return;
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('section.view').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+  });
+});
+
+renderAll(currentLeague);
+</script>
+</body>
+</html>
