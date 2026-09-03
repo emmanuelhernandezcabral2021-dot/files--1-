@@ -1,0 +1,32 @@
+name: Actualizacion Automatica de Futbol
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Se despierta solo todas las noches a las 00:00 UTC
+  workflow_dispatch: # Te da un boton por si quieres activarlo tu mismo
+
+jobs:
+  actualizar-datos:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clonar el proyecto
+      uses: actions/checkout@v4
+
+    - name: Configurar Python en internet
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Instalar libreria de internet
+      run: pip install requests
+
+    - name: Ejecutar el robot recolector
+      run: python actualizar.py
+
+    - name: Guardar los nuevos partidos en la web
+      run: |
+        git config --global user.name "Robot Futbolero"
+        git config --global user.email "bot@futbol.com"
+        git add datos.js
+        git commit -m "🤖 Auto-update: Partidos reales del dia actualizados" || exit 0
+        git push

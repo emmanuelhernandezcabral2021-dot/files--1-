@@ -1,7 +1,10 @@
 import json
 import requests
 
+<<<<<<< HEAD
 # Esta es la dirección limpia, real y sin errores
+=======
+>>>>>>> 9b2e5fcd22130df6ff5327dd35bc74737e37a57e
 URL_API = "https://githubusercontent.com"
 
 print("🤖 El robot en la nube está buscando los partidos reales...")
